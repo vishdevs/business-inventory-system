@@ -1,99 +1,105 @@
-// src/pages/LoginPage.tsx
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-export default function LoginPage() {
+const LoginPage: React.FC = () => {
   const navigate = useNavigate();
   const [email, setEmail] = useState("admin@demo.com");
   const [password, setPassword] = useState("admin123");
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-
-    // Frontend-only demo: accept any non-empty email + password
     if (!email || !password) return;
 
-    setIsSubmitting(true);
+    setLoading(true);
 
-    // Small delay for smooth UX animation
+    // Demo-only: simulate login then go to dashboard
     setTimeout(() => {
-      // In a real app you would call an auth API here
       navigate("/dashboard");
-    }, 650);
+    }, 600);
   };
 
   const handleDemoClick = () => {
-    setIsSubmitting(true);
+    setLoading(true);
     setTimeout(() => {
       navigate("/dashboard");
-    }, 450);
+    }, 400);
   };
 
   return (
     <div className="login-page">
       <div className="login-shell">
-        {/* Left visual panel */}
-        <div className="login-panel login-panel-left">
-          <div className="login-brand">
+        {/* LEFT SIDE – brand / description */}
+        <div className="login-left">
+          <div className="login-left-header">
             <div className="login-logo-mark">BI</div>
-            <div className="login-brand-text">
-              <span className="login-brand-title">Business Inventory</span>
-              <span className="login-brand-tagline">Web dashboard</span>
+            <div className="login-logo-text">
+              <span className="login-logo-title">Business Inventory</span>
+              <span className="login-logo-subtitle">Admin workspace</span>
             </div>
           </div>
 
-          <div className="login-panel-content">
-            <h2 className="login-panel-heading">
-              Control products, stock and sales from a single dashboard.
-            </h2>
-            <p className="login-panel-body">
-              A lightweight SaaS-style inventory dashboard focused on clean UI,
-              instant insights and a smooth daily workflow.
+          <div className="login-left-body">
+            <h2>Control products, stock and sales in one view.</h2>
+            <p>
+              A clean, modern inventory dashboard designed as a SaaS-style
+              portfolio project. Focused on clarity, speed and everyday use.
             </p>
 
-            <ul className="login-bullets">
-              <li>• Inventory, sales and customers in one place</li>
-              <li>• Clear KPIs and low stock notifications</li>
-              <li>• Designed as a portfolio-ready admin interface</li>
+            <ul>
+              <li>• Products, sales and low stock indicators</li>
+              <li>• Simple, keyboard-friendly interface</li>
+              <li>• Ready to connect to a real backend API</li>
             </ul>
 
-            <div className="login-mini-card">
+            <div className="login-highlight-card">
               <div>
-                <div className="login-mini-label">Today&apos;s activity</div>
-                <div className="login-mini-value">
+                <div className="login-highlight-label">Today&apos;s activity</div>
+                <div className="login-highlight-value">
                   +18 orders · 6 low stock alerts
                 </div>
               </div>
-              <div className="login-mini-pills">
-                <span className="login-mini-pill login-mini-pill-green">
+              <div className="login-highlight-badges">
+                <span className="login-highlight-pill login-pill-success">
                   ↑ 12% vs yesterday
                 </span>
-                <span className="login-mini-pill">Demo environment</span>
+                <span className="login-highlight-pill">Demo environment</span>
               </div>
             </div>
           </div>
+
+          <div className="login-left-footer">
+            <span className="login-footer-label">Designed for</span>
+            <span className="login-footer-text">
+              Small shops, distributors and retail chains.
+            </span>
+          </div>
         </div>
 
-        {/* Right form panel */}
-        <div className="login-panel login-panel-right">
-          <div className="login-card-pro">
+        {/* RIGHT SIDE – actual form */}
+        <div className="login-right">
+          <div className="login-card">
             <div className="login-card-header">
-              <div className="login-logo-circle-pro">BI</div>
+              <div className="login-card-logo">BI</div>
               <div>
-                <h1 className="login-title-pro">Sign in to dashboard</h1>
-                <p className="login-subtitle-pro">
-                  Use demo credentials or continue as a viewer to explore the
-                  system.
+                <h1>Sign in to dashboard</h1>
+                <p>
+                  Use the demo credentials or any email and password to explore
+                  the interface.
                 </p>
               </div>
             </div>
 
-            <form className="login-form-pro" onSubmit={handleSubmit}>
-              <div className="login-field-pro">
-                <label className="login-label-pro">Email</label>
+            <div className="login-demo-banner">
+              <span className="login-demo-label">Demo credentials</span>
+              <span className="login-demo-value">admin@demo.com / admin123</span>
+              <span className="login-demo-chip">No real authentication</span>
+            </div>
+
+            <form className="login-form" onSubmit={handleSubmit}>
+              <div className="login-field">
+                <label>Email</label>
                 <input
-                  className="login-input-pro"
                   type="email"
                   placeholder="you@example.com"
                   value={email}
@@ -102,31 +108,29 @@ export default function LoginPage() {
                 />
               </div>
 
-              <div className="login-field-pro">
-                <label className="login-label-pro">Password</label>
+              <div className="login-field">
+                <label>Password</label>
                 <input
-                  className="login-input-pro"
                   type="password"
-                  placeholder="••••••••"
+                  placeholder="●●●●●●●●"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
                 />
               </div>
 
-              <div className="login-footer-row-pro">
-                <label className="login-remember-pro">
+              <div className="login-form-footer">
+                <label className="login-remember">
                   <input type="checkbox" />
                   <span>Remember for 7 days</span>
                 </label>
 
                 <button
                   type="button"
-                  className="login-link-button-pro"
-                  onClick={() => {
-                    // No real reset flow in demo
-                    alert("Password reset is not connected in this demo.");
-                  }}
+                  className="login-link-button"
+                  onClick={() =>
+                    alert("Password reset is not connected in this demo.")
+                  }
                 >
                   Forgot password?
                 </button>
@@ -134,35 +138,35 @@ export default function LoginPage() {
 
               <button
                 type="submit"
-                className="login-submit-pro"
-                disabled={isSubmitting}
+                className="login-primary-btn"
+                disabled={loading}
               >
-                {isSubmitting ? "Signing in…" : "Sign in"}
+                {loading ? "Signing in…" : "Sign in"}
               </button>
 
               <button
                 type="button"
-                className="login-secondary-pro"
+                className="login-secondary-btn"
                 onClick={handleDemoClick}
-                disabled={isSubmitting}
+                disabled={loading}
               >
                 Continue as demo viewer
               </button>
-            </form>
 
-            <div className="login-meta-pro">
-              <span>Frontend-only prototype · Authentication is not wired.</span>
-            </div>
+              <div className="login-meta">
+                <span>Frontend-only prototype · Authentication not wired.</span>
+              </div>
+            </form>
           </div>
 
-          <div className="login-footer-meta">
-            <span>
-              © {new Date().getFullYear()} Business Inventory Dashboard ·
-              Portfolio demo
-            </span>
+          <div className="login-right-footer">
+            <span>© {new Date().getFullYear()} Business Inventory Dashboard</span>
+            <span>Built for portfolio demonstrations</span>
           </div>
         </div>
       </div>
     </div>
   );
-              }
+};
+
+export default LoginPage;
