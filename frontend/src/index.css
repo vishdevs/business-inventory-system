@@ -1037,3 +1037,157 @@ textarea {
     justify-content: flex-start;
   }
                               }
+/* ========== Dashboard premium polish ========== */
+
+.dashboard-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 6px;
+}
+
+.dashboard-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.dashboard-pill-group {
+  display: flex;
+  gap: 6px;
+}
+
+.dashboard-pill {
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid #e5e7eb;
+  font-size: 11px;
+  background: #ffffff;
+  color: #4b5563;
+  cursor: pointer;
+}
+
+.dashboard-pill-muted {
+  background: #111827;
+  color: #e5e7eb;
+  border-color: #111827;
+}
+
+.dashboard-export-btn {
+  padding: 7px 12px;
+  border-radius: 999px;
+  border: 1px solid #d1d5db;
+  font-size: 11px;
+  background: #f9fafb;
+  cursor: pointer;
+}
+
+/* KPI trends */
+
+.kpi-trend {
+  margin-top: 6px;
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+}
+
+.kpi-trend-up {
+  background: #ecfdf5;
+  color: #15803d;
+}
+
+.kpi-trend-down {
+  background: #fef2f2;
+  color: #b91c1c;
+}
+
+.kpi-trend-neutral {
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
+/* Mini chart */
+
+.dashboard-mini-chart {
+  margin-top: 10px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #eef2ff, #f9fafb);
+  border: 1px solid #e5e7eb;
+}
+
+.dashboard-mini-chart-bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+  height: 80px;
+}
+
+.chart-bar {
+  flex: 1;
+  border-radius: 999px 999px 0 0;
+  background: #c4d3ff;
+}
+
+.chart-bar-accent {
+  background: #4f46e5;
+}
+
+.dashboard-mini-chart-legend {
+  margin-top: 8px;
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: #6b7280;
+}
+
+/* Summary row */
+
+.dashboard-summary-row {
+  margin-top: 12px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.summary-label {
+  font-size: 11px;
+  color: #6b7280;
+}
+
+.summary-value {
+  font-size: 13px;
+  font-weight: 500;
+}
+
+/* Activity */
+
+.activity-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.activity-amount {
+  font-size: 13px;
+  font-weight: 500;
+}
+
+/* Page fade-in */
+
+.page {
+  animation: page-fade 0.28s ease-out;
+}
+
+@keyframes page-fade {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
