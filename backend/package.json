@@ -1,16 +1,20 @@
 {
-  "name": "inventory-backend",
+  "name": "business-inventory-backend",
   "version": "1.0.0",
-  "private": true,
-  "type": "module",
+  "description": "Backend API for Business Inventory Management System",
   "main": "index.js",
+  "type": "commonjs",
   "scripts": {
-    "start": "node index.js"
+    "start": "node index.js",
+    "dev": "node index.js"
+  },
+  "engines": {
+    "node": ">=18"
   },
   "dependencies": {
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
-    "pg": "^8.11.5"
+    "pg": "^8.12.0"
   }
 }
