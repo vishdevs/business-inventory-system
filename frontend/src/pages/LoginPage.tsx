@@ -8,37 +8,49 @@ const LoginPage: React.FC = () => {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (email === "admin@example.com" && password === "admin123") {
+    const validEmail = "admin@example.com";
+    const validPassword = "admin123";
+
+    if (email === validEmail && password === validPassword) {
+      setError("");
       navigate("/dashboard");
     } else {
-      setError("Invalid login details");
+      setError("Wrong email or password");
     }
   };
 
   return (
     <div className="login-wrapper">
       <div className="login-card animate-login">
-        <h2 className="login-title">Sign In</h2>
+        {/* Small brand row */}
+        <div className="login-brand">
+          <div className="login-logo-dot" />
+          <span className="login-brand-text">Business Inventory</span>
+        </div>
 
-        <form onSubmit={handleLogin} className="login-form">
+        {/* Professional heading */}
+        <h2 className="login-title">Sign in to your dashboard</h2>
+
+        {/* Login form */}
+        <form onSubmit={handleSubmit} className="login-form">
           <input
             type="email"
             placeholder="Email"
+            className="login-input"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="login-input"
             required
           />
 
           <input
             type="password"
             placeholder="Password"
+            className="login-input"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="login-input"
             required
           />
 
