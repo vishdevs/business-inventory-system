@@ -15,7 +15,7 @@ import SalesPage from "./pages/SalesPage";
 
 /**
  * Top layout for all authenticated pages (dashboard, products, sales)
- * Login page यामध्ये येत नाही.
+ * Login page.
  */
 const AppLayout: React.FC = () => {
   const navigate = useNavigate();
@@ -24,7 +24,7 @@ const AppLayout: React.FC = () => {
     isActive ? "app-nav-link app-nav-link-active" : "app-nav-link";
 
   const handleLogout = () => {
-    // जर नंतर real auth केली तर इथे token clear करायचा.
+    // real auth
     navigate("/login");
   };
 
