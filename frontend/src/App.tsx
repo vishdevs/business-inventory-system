@@ -1,6 +1,6 @@
 import React from "react";
 import {
-  BrowserRouter,
+  HashRouter,
   Routes,
   Route,
   NavLink,
@@ -15,7 +15,7 @@ import SalesPage from "./pages/SalesPage";
 
 /**
  * Top layout for all authenticated pages (dashboard, products, sales)
- * Login page.
+ * Login page
  */
 const AppLayout: React.FC = () => {
   const navigate = useNavigate();
@@ -24,7 +24,7 @@ const AppLayout: React.FC = () => {
     isActive ? "app-nav-link app-nav-link-active" : "app-nav-link";
 
   const handleLogout = () => {
-    // real auth
+    // real auth token/session clear
     navigate("/login");
   };
 
@@ -65,7 +65,7 @@ const AppLayout: React.FC = () => {
 
 const App: React.FC = () => {
   return (
-    <BrowserRouter>
+    <HashRouter>
       <Routes>
         {/* Login routes (no layout) */}
         <Route path="/" element={<LoginPage />} />
@@ -81,7 +81,7 @@ const App: React.FC = () => {
         {/* Fallback: unknown path → Login */}
         <Route path="*" element={<LoginPage />} />
       </Routes>
-    </BrowserRouter>
+    </HashRouter>
   );
 };
 
