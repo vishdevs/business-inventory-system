@@ -1,38 +1,40 @@
-/* Full-screen centered layout */
+/* ========== Layout ========== */
+
 .login-wrapper {
-  height: 100vh;
+  min-height: 100vh;
   width: 100%;
   display: flex;
-  justify-content: center;
   align-items: center;
-  background: linear-gradient(135deg, #f5f7fa, #dde3ec);
-  padding: 20px;
+  justify-content: center;
+  background: linear-gradient(135deg, #f5f7fa, #e0e7ff);
+  padding: 24px;
 }
 
-/* Login card */
+/* ========== Login Card ========== */
+
 .login-card {
   width: 100%;
-  max-width: 380px;
+  max-width: 420px;
   background: #ffffff;
-  padding: 32px;
-  border-radius: 14px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  border-radius: 16px;
+  padding: 32px 30px 30px;
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.12);
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 18px;
   opacity: 0;
-  transform: translateY(20px);
+  transform: translateY(18px);
 }
 
-/* Smooth fade-in animation */
+/* Entry animation */
 .animate-login {
-  animation: fadeSlideIn 0.7s ease forwards;
+  animation: loginFade 0.55s ease-out forwards;
 }
 
-@keyframes fadeSlideIn {
+@keyframes loginFade {
   from {
     opacity: 0;
-    transform: translateY(20px);
+    transform: translateY(18px);
   }
   to {
     opacity: 1;
@@ -40,65 +42,123 @@
   }
 }
 
-/* Title */
-.login-title {
-  font-size: 26px;
-  font-weight: 700;
-  text-align: center;
-  color: #1a1a1a;
+/* ========== Brand Row ========== */
+
+.login-brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #475569;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
-/* Form */
+.login-logo-dot {
+  width: 18px;
+  height: 18px;
+  border-radius: 6px;
+  background: linear-gradient(135deg, #2563eb, #6366f1);
+}
+
+.login-brand-text {
+  user-select: none;
+}
+
+/* ========== Heading ========== */
+
+.login-title {
+  margin-top: 4px;
+  font-size: 24px;
+  font-weight: 700;
+  color: #0f172a;
+  line-height: 1.25;
+}
+
+/* ========== Form ========== */
+
 .login-form {
+  margin-top: 6px;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 14px;
 }
 
-/* Inputs */
+/* ========== Inputs ========== */
+
 .login-input {
   width: 100%;
   padding: 12px 14px;
-  border-radius: 8px;
-  border: 1.5px solid #d4d7df;
-  font-size: 15px;
+  font-size: 14px;
+  border-radius: 10px;
+  border: 1.5px solid #d1d5db;
+  background: #f9fafb;
+  color: #0f172a;
   outline: none;
-  transition: all 0.25s ease;
-  background: #fafbfd;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease,
+    background-color 0.2s ease;
+}
+
+.login-input::placeholder {
+  color: #9ca3af;
 }
 
 .login-input:focus {
-  border-color: #4a6cf7;
-  box-shadow: 0 0 0 3px rgba(74, 108, 247, 0.15);
   background: #ffffff;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
 }
 
-/* Login button */
+/* ========== Button ========== */
+
 .login-btn {
+  margin-top: 6px;
   width: 100%;
-  padding: 12px 0;
+  height: 44px;
   border: none;
-  border-radius: 8px;
-  background: #4a6cf7;
+  border-radius: 10px;
+  background: #2563eb;
   color: #ffffff;
+  font-size: 14px;
   font-weight: 600;
-  font-size: 15px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: background-color 0.2s ease, transform 0.15s ease,
+    box-shadow 0.15s ease;
 }
 
 .login-btn:hover {
-  background: #3a58d4;
+  background: #1d4ed8;
   transform: translateY(-1px);
+  box-shadow: 0 8px 18px rgba(37, 99, 235, 0.35);
 }
 
-/* Error message */
+.login-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 4px 10px rgba(37, 99, 235, 0.25);
+}
+
+/* ========== Error Message ========== */
+
 .login-error {
-  background: #ffe6e6;
-  color: #d10000;
-  padding: 10px;
-  font-size: 14px;
-  border-radius: 6px;
+  margin-top: 2px;
+  padding: 9px 10px;
+  border-radius: 8px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #b91c1c;
+  font-size: 13px;
   text-align: center;
-  border: 1px solid #ffb3b3;
+}
+
+/* ========== Responsive ========== */
+
+@media (max-width: 420px) {
+  .login-card {
+    padding: 26px 22px 24px;
   }
+
+  .login-title {
+    font-size: 22px;
+  }
+}
