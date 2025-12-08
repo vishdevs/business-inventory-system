@@ -11,8 +11,8 @@ const LoginPage: React.FC = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    const validEmail = "login@gmail.com";
-    const validPassword = "12345678*";
+    const validEmail = "admin@example.com";
+    const validPassword = "admin123";
 
     if (email === validEmail && password === validPassword) {
       setError("");
