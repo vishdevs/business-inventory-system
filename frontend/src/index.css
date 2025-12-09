@@ -1369,3 +1369,47 @@ a:hover {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
    }
+/* === Fullscreen dark layout – paste at very bottom of index.css === */
+
+/* Remove default white margin/background */
+html,
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+}
+
+/* Global dark background */
+body {
+  background: #020617; /* dark navy */
+  color: #e5e7eb;
+}
+
+/* React root container */
+#root {
+  min-height: 100vh;
+  width: 100%;
+  background: #020617; /* same dark color */
+}
+
+/* Main app shell –*/
+.bi-app-shell,
+.app-shell,
+.app-root {
+  min-height: 100vh;
+  width: 100vw;
+  background: radial-gradient(circle at top, #1f2937 0, #020617 55%);
+  overflow-x: hidden; /* horizontal  */
+}
+
+/* Content area*/
+.bi-main-layout,
+.bi-page,
+.main-layout,
+.main-content {
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+  padding: 24px 32px 40px 32px; /* */
+  box-sizing: border-box;
+}
