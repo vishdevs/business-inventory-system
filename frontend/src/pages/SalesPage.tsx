@@ -1,374 +1,271 @@
-import React, { useMemo, useState } from "react";
-import { Link } from "react-router-dom";
-import { mockProducts, Product } from "../mock/inventory";
+// frontend/src/pages/SalesPage.tsx
 
-type CartItem = {
-  id: number;
-  product: Product;
-  quantity: number;
-};
+import React, { useEffect, useMemo, useState } from "react";
+import api from "../api/client";
 
-type PastOrder = {
+type InvoiceStatus = "Paid" | "Pending" | "Processing" | "Cancelled";
+
+type InvoiceRow = {
   id: number;
   invoice: string;
   customer: string;
   date: string;
   amount: number;
-  status: "Paid" | "Pending";
+  status: InvoiceStatus;
 };
 
-const mockPastOrders: PastOrder[] = [
-  {
-    id: 1,
-    invoice: "#INV-1019",
-    customer: "Greenfield Stores",
-    date: "02 Aug · 11:42",
-    amount: 43200,
-    status: "Paid",
-  },
-  {
-    id: 2,
-    invoice: "#INV-1018",
-    customer: "Urban Mart",
-    date: "01 Aug · 17:25",
-    amount: 18990,
-    status: "Paid",
-  },
-  {
-    id: 3,
-    invoice: "#INV-1017",
-    customer: "Aarav Shah",
-    date: "30 Jul · 12:07",
-    amount: 8200,
-    status: "Paid",
-  },
-  {
-    id: 4,
-    invoice: "#INV-1016",
-    customer: "Riya Desai",
-    date: "29 Jul · 09:18",
-    amount: 15499,
-    status: "Pending",
-  },
-];
+type SalesDashboard = {
+  totalRevenueToday: number;
+  totalRevenueWeek: number;
+  totalOrdersToday: number;
+  avgOrderValue: number;
+  refundRate: number;
+  recentInvoices: InvoiceRow[];
+  revenueTrend: { label: string; value: number }[];
+};
 
-const formatCurrency = (value: number) =>
-  `₹${value.toLocaleString("en-IN")}`;
+type SalesResponse = SalesDashboard;
+
+// ---------- Mock fallback ----------
+
+const mockSalesData: SalesDashboard = {
+  totalRevenueToday: 104400,
+  totalRevenueWeek: 540000,
+  totalOrdersToday: 4,
+  avgOrderValue: 26100,
+  refundRate: 1.4,
+  revenueTrend: [
+    { label: "Today", value: 104400 },
+    { label: "This week", value: 540000 },
+    { label: "Last week", value: 480000 },
+  ],
+  recentInvoices: [
+    {
+      id: 1,
+      invoice: "#INV-1023",
+      customer: "Aarav Shah",
+      date: "Today · 10:21",
+      amount: 12500,
+      status: "Paid",
+    },
+    {
+      id: 2,
+      invoice: "#INV-1022",
+      customer: "Greenfield Stores",
+      date: "Today · 09:10",
+      amount: 58900,
+      status: "Paid",
+    },
+    {
+      id: 3,
+      invoice: "#INV-1021",
+      customer: "Urban Mart",
+      date: "Yesterday",
+      amount: 24800,
+      status: "Paid",
+    },
+    {
+      id: 4,
+      invoice: "#INV-1020",
+      customer: "Riya Desai",
+      date: "2 days ago",
+      amount: 8200,
+      status: "Pending",
+    },
+  ],
+};
 
 const SalesPage: React.FC = () => {
-  const [customerName, setCustomerName] = useState("");
-  const [selectedProductId, setSelectedProductId] = useState<number | "">("");
-  const [quantity, setQuantity] = useState<number>(1);
-  const [cart, setCart] = useState<CartItem[]>([]);
-  const [orderNote, setOrderNote] = useState("");
-  const [feedback, setFeedback] = useState<string | null>(null);
+  const [data, setData] = useState<SalesDashboard | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [source, setSource] = useState<"mock" | "live">("mock");
 
-  const selectedProduct = useMemo(
-    () => mockProducts.find((p) => p.id === selectedProductId),
-    [selectedProductId]
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const res = await api.get<SalesResponse>("/api/sales-dashboard");
+        setData(res.data);
+        setSource("live");
+      } catch (err) {
+        console.warn("Sales API failed, using mock data", err);
+        setData(mockSalesData);
+        setSource("mock");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    load();
+  }, []);
+
+  const d = data ?? mockSalesData;
+
+  const maxTrendValue = useMemo(
+    () => Math.max(...d.revenueTrend.map((p) => p.value)),
+    [d]
   );
-
-  const cartSubtotal = useMemo(
-    () =>
-      cart.reduce(
-        (sum, item) => sum + item.product.sellingPrice * item.quantity,
-        0
-      ),
-    [cart]
-  );
-
-  const totalItems = useMemo(
-    () => cart.reduce((sum, item) => sum + item.quantity, 0),
-    [cart]
-  );
-
-  const handleAddToCart = () => {
-    if (!selectedProduct) return;
-
-    if (quantity <= 0) {
-      setFeedback("Quantity must be at least 1");
-      return;
-    }
-
-    const existing = cart.find((item) => item.product.id === selectedProduct.id);
-
-    if (existing) {
-      setCart((prev) =>
-        prev.map((item) =>
-          item.product.id === selectedProduct.id
-            ? { ...item, quantity: item.quantity + quantity }
-            : item
-        )
-      );
-    } else {
-      const newItem: CartItem = {
-        id: Date.now(),
-        product: selectedProduct,
-        quantity,
-      };
-      setCart((prev) => [...prev, newItem]);
-    }
-
-    setFeedback(null);
-    setQuantity(1);
-  };
-
-  const handleRemoveFromCart = (id: number) => {
-    setCart((prev) => prev.filter((item) => item.id !== id));
-  };
-
-  const handlePlaceOrder = () => {
-    if (!customerName.trim()) {
-      setFeedback("Please enter a customer name");
-      return;
-    }
-    if (cart.length === 0) {
-      setFeedback("Add at least one product to the cart");
-      return;
-    }
-
-    // Frontend-only: we just show a short success message.
-    setFeedback(
-      `Order draft created for ${customerName} · ${totalItems} items · ${formatCurrency(
-        cartSubtotal
-      )}`
-    );
-
-    // In real app you would send this data to the backend here.
-  };
 
   return (
-    <div className="page">
-      <div className="page-header">
-        <h1>Sales &amp; new order</h1>
-        <p>Create a new order, add items to cart and review recent invoices.</p>
-      </div>
-
-      {/* Top info row */}
-      <div className="kpi-row" style={{ marginBottom: 16 }}>
-        <div className="kpi-card">
-          <div className="kpi-label">Active products</div>
-          <div className="kpi-value">{mockProducts.length}</div>
-          <div className="kpi-sub">Available in catalog</div>
-        </div>
-        <div className="kpi-card">
-          <div className="kpi-label">Today&apos;s sales (sample)</div>
-          <div className="kpi-value">{formatCurrency(185000)}</div>
-          <div className="kpi-sub">Frontend-only sample data</div>
-        </div>
-        <div className="kpi-card">
-          <div className="kpi-label">Recent invoices</div>
-          <div className="kpi-value">{mockPastOrders.length}</div>
-          <div className="kpi-sub">Last few orders in history</div>
-        </div>
-      </div>
-
-      <div className="grid-2">
-        {/* Create new order */}
-        <div className="card">
-          <div className="card-header">
-            <span>Create new order</span>
-            <span className="card-meta">
-              Draft only · no backend integration.
-            </span>
+    <div className="bi-dashboard-root">
+      <div className="bi-dashboard-shell bi-sales-shell">
+        {/* Header row */}
+        <header className="bi-sales-header">
+          <div>
+            <h1 className="bi-products-title">Inventory Management Dashboard</h1>
+            <p className="bi-products-subtitle">
+              Overview of products, orders, stock health and daily sales in one
+              place.
+            </p>
+            <p className="bi-sales-source-note">
+              Data source:{" "}
+              {source === "mock"
+                ? "Sample demo data. Once the backend is connected, this dashboard can read live metrics from the database."
+                : "Live data via backend API."}
+            </p>
           </div>
 
-          <div className="sales-form">
-            <div className="form-field">
-              <label>Customer name</label>
-              <input
-                type="text"
-                className="input"
-                placeholder="Enter customer name"
-                value={customerName}
-                onChange={(e) => setCustomerName(e.target.value)}
-              />
-            </div>
-
-            <div className="form-field">
-              <label>Select product</label>
-              <select
-                className="input"
-                value={selectedProductId === "" ? "" : selectedProductId}
-                onChange={(e) =>
-                  setSelectedProductId(
-                    e.target.value ? Number(e.target.value) : ""
-                  )
-                }
-              >
-                <option value="">Choose a product</option>
-                {mockProducts.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.name} — {formatCurrency(p.sellingPrice)}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="form-field">
-              <label>Quantity</label>
-              <input
-                type="number"
-                min={1}
-                className="input"
-                value={quantity}
-                onChange={(e) => setQuantity(Number(e.target.value))}
-              />
-            </div>
-
-            <div className="form-field">
-              <label>Notes (optional)</label>
-              <textarea
-                className="input"
-                rows={3}
-                placeholder="Add delivery or billing notes"
-                value={orderNote}
-                onChange={(e) => setOrderNote(e.target.value)}
-              />
-            </div>
-
-            {feedback && <div className="info-banner">{feedback}</div>}
-
-            <div className="sales-actions">
-              <button
-                type="button"
-                className="primary-btn"
-                onClick={handleAddToCart}
-              >
-                + Add to cart
+          <div className="bi-sales-header-right">
+            <div className="bi-sales-toggle-group">
+              <button className="bi-sales-toggle bi-sales-toggle-active">
+                This week
               </button>
+              <button className="bi-sales-toggle">This month</button>
+            </div>
+            <button className="bi-products-button-ghost">
+              Download report
+            </button>
+          </div>
+        </header>
 
-              <button
-                type="button"
-                className="secondary-btn"
-                onClick={handlePlaceOrder}
-              >
-                Save order draft
+        {/* Top stats row */}
+        <section className="bi-sales-kpi-row">
+          <div className="bi-sales-kpi-card">
+            <p className="bi-products-kpi-label">Total revenue (today)</p>
+            <p className="bi-sales-kpi-value">
+              ₹{d.totalRevenueToday.toLocaleString()}
+            </p>
+            <p className="bi-products-kpi-hint">From all recorded orders</p>
+          </div>
+          <div className="bi-sales-kpi-card">
+            <p className="bi-products-kpi-label">Orders</p>
+            <p className="bi-sales-kpi-value">{d.totalOrdersToday}</p>
+            <p className="bi-products-kpi-hint">Completed invoices · Stable</p>
+          </div>
+          <div className="bi-sales-kpi-card">
+            <p className="bi-products-kpi-label">Avg. order value</p>
+            <p className="bi-sales-kpi-value">
+              ₹{d.avgOrderValue.toLocaleString()}
+            </p>
+            <p className="bi-products-kpi-hint">Across today&apos;s orders</p>
+          </div>
+          <div className="bi-sales-kpi-card">
+            <p className="bi-products-kpi-label">Refund rate</p>
+            <p className="bi-sales-kpi-value">{d.refundRate.toFixed(1)}%</p>
+            <p className="bi-products-kpi-hint">Sample metric</p>
+          </div>
+        </section>
+
+        {/* Revenue chart + recent invoices */}
+        <section className="bi-sales-main-grid">
+          {/* Revenue overview */}
+          <div className="bi-dashboard-card bi-sales-revenue-card">
+            <header className="bi-dashboard-card-header">
+              <p className="bi-dashboard-card-title">Revenue overview</p>
+              <div className="bi-sales-toggle-group">
+                <button className="bi-sales-toggle bi-sales-toggle-active">
+                  Today
+                </button>
+                <button className="bi-sales-toggle">This week</button>
+                <button className="bi-sales-toggle">This month</button>
+              </div>
+            </header>
+
+            <div className="bi-sales-revenue-chart">
+              {d.revenueTrend.map((p) => (
+                <div key={p.label} className="bi-sales-revenue-bar-wrapper">
+                  <div
+                    className="bi-sales-revenue-bar"
+                    style={{
+                      height: `${40 + (p.value / maxTrendValue) * 80}px`,
+                    }}
+                  />
+                  <span className="bi-sales-revenue-label">{p.label}</span>
+                </div>
+              ))}
+            </div>
+
+            <div className="bi-sales-revenue-summary">
+              <div>
+                <p className="bi-dashboard-muted">Today</p>
+                <p className="bi-sales-summary-value">
+                  ₹{d.totalRevenueToday.toLocaleString()}
+                </p>
+              </div>
+              <div>
+                <p className="bi-dashboard-muted">This week (est.)</p>
+                <p className="bi-sales-summary-value">
+                  ₹{d.totalRevenueWeek.toLocaleString()}
+                </p>
+              </div>
+              <div>
+                <p className="bi-dashboard-muted">Refund rate</p>
+                <p className="bi-sales-summary-value">
+                  {d.refundRate.toFixed(1)}%
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Recent invoices */}
+          <div className="bi-dashboard-card bi-sales-invoices-card">
+            <header className="bi-dashboard-card-header">
+              <p className="bi-dashboard-card-title">Recent invoices</p>
+              <button className="bi-products-button-ghost-small">
+                View all
               </button>
-            </div>
+            </header>
+            <p className="bi-dashboard-muted bi-sales-invoices-subtitle">
+              Latest recorded sales.
+            </p>
 
-            <div className="sales-note">
-              This page is frontend-only. When the backend is connected, this
-              form can create live orders in the database.
-            </div>
-          </div>
-        </div>
-
-        {/* Cart + summary */}
-        <div className="card">
-          <div className="card-header">
-            <span>Cart items</span>
-            <span className="card-meta">
-              {totalItems} items · {formatCurrency(cartSubtotal)}
-            </span>
-          </div>
-
-          {cart.length === 0 ? (
-            <div className="empty-state">
-              <p>No items in cart</p>
-              <span>
-                Select a product, choose quantity and click &quot;Add to cart&quot;.
-              </span>
-            </div>
-          ) : (
-            <>
-              <table className="simple-table">
+            <div className="bi-dashboard-table-wrapper">
+              <table className="bi-dashboard-table">
                 <thead>
                   <tr>
-                    <th>Product</th>
-                    <th style={{ width: 80 }}>Qty</th>
-                    <th style={{ width: 120 }}>Price</th>
-                    <th style={{ width: 120 }}>Amount</th>
-                    <th style={{ width: 80 }}>Actions</th>
+                    <th>Invoice</th>
+                    <th>Customer</th>
+                    <th>Date</th>
+                    <th>Amount</th>
+                    <th>Status</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {cart.map((item) => {
-                    const lineTotal =
-                      item.product.sellingPrice * item.quantity;
-                    return (
-                      <tr key={item.id}>
-                        <td>{item.product.name}</td>
-                        <td>{item.quantity}</td>
-                        <td>{formatCurrency(item.product.sellingPrice)}</td>
-                        <td>{formatCurrency(lineTotal)}</td>
-                        <td>
-                          <button
-                            type="button"
-                            className="table-link-danger"
-                            onClick={() => handleRemoveFromCart(item.id)}
-                          >
-                            Remove
-                          </button>
-                        </td>
-                      </tr>
-                    );
-                  })}
+                  {d.recentInvoices.map((row) => (
+                    <tr key={row.id}>
+                      <td>{row.invoice}</td>
+                      <td>{row.customer}</td>
+                      <td>{row.date}</td>
+                      <td>₹{row.amount.toLocaleString()}</td>
+                      <td>
+                        <span
+                          className={`bi-sales-status-pill bi-sales-status-${row.status.toLowerCase()}`}
+                        >
+                          {row.status}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
                 </tbody>
               </table>
-
-              <div className="cart-summary-row">
-                <div>
-                  <div className="summary-label">Items</div>
-                  <div className="summary-value">{totalItems}</div>
-                </div>
-                <div>
-                  <div className="summary-label">Subtotal</div>
-                  <div className="summary-value">
-                    {formatCurrency(cartSubtotal)}
-                  </div>
-                </div>
-              </div>
-            </>
-          )}
-
-          <div className="recent-footer">
-            <Link to="/products" className="link-button">
-              View product inventory
-            </Link>
+            </div>
           </div>
-        </div>
-      </div>
+        </section>
 
-      {/* Recent orders */}
-      <div className="card" style={{ marginTop: 16 }}>
-        <div className="card-header">
-          <span>Recent sales activity</span>
-          <span className="card-meta">Static sample data · no backend</span>
-        </div>
-
-        <table className="simple-table">
-          <thead>
-            <tr>
-              <th>Invoice</th>
-              <th>Customer</th>
-              <th>Date</th>
-              <th>Amount</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            {mockPastOrders.map((order) => (
-              <tr key={order.id}>
-                <td>{order.invoice}</td>
-                <td>{order.customer}</td>
-                <td>{order.date}</td>
-                <td>{formatCurrency(order.amount)}</td>
-                <td>
-                  <span
-                    className={
-                      order.status === "Paid"
-                        ? "status-pill status-pill-success"
-                        : "status-pill status-pill-warning"
-                    }
-                  >
-                    {order.status}
-                  </span>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        {loading && (
+          <div className="bi-dashboard-loading-overlay">
+            <span>Loading sales metrics…</span>
+          </div>
+        )}
       </div>
     </div>
   );
