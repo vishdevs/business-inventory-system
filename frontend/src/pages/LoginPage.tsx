@@ -134,27 +134,6 @@ const LoginPage: React.FC = () => {
               {isSubmitting ? "Signing in…" : "Sign in"}
             </button>
 
-            <p className="login-demo-helper">
-              Demo credentials: <b>{DEMO_EMAIL}</b> / <b>{DEMO_PASSWORD}</b>
-            </p>
-
-            <div className="login-footer-actions">
-              <button
-                type="button"
-                className="login-ghost-button"
-                onClick={() => navigate("/dashboard")}
-              >
-                Admin console
-              </button>
-              <button type="button" className="login-ghost-link">
-                Request account
-              </button>
-            </div>
-          </form>
-        </section>
-      </div>
-    </div>
-  );
-};
+            
 
 export default LoginPage;
