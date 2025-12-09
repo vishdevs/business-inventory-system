@@ -1,7 +1,6 @@
-// src/pages/LoginPage.tsx
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import "../login.css";
+import "./login.css";
 
 const DEMO_EMAIL = "manager@company.com";
 const DEMO_PASSWORD = "inventory123";
@@ -19,7 +18,7 @@ const LoginPage: React.FC = () => {
     setError("");
     setIsSubmitting(true);
 
-    // Simple frontend-only check (no credentials shown in UI)
+    // Frontend-only demo check (credentials NOT shown in UI)
     if (email === DEMO_EMAIL && password === DEMO_PASSWORD) {
       setTimeout(() => {
         navigate("/dashboard");
@@ -63,7 +62,7 @@ const LoginPage: React.FC = () => {
             </div>
             <div className="login-stat-card">
               <div className="login-stat-label">Items tracked</div>
-              <div className="login-stat-value">2.4k+</div>
+              <div className="login-stat-value">2.4M+</div>
               <div className="login-stat-foot">Last 50 days</div>
             </div>
             <div className="login-stat-card">
@@ -89,7 +88,9 @@ const LoginPage: React.FC = () => {
         <section className="login-panel login-panel-right">
           <div className="login-card">
             <p className="login-pill">WELCOME BACK</p>
-            <h2 className="login-card-heading">Sign in to Business Inventory</h2>
+            <h2 className="login-card-heading">
+              Sign in to Business Inventory
+            </h2>
             <p className="login-card-subtext">
               Use your work email to access the admin console and branch
               dashboards.
@@ -100,7 +101,9 @@ const LoginPage: React.FC = () => {
                 Work email
               </label>
               <div className="login-input-wrapper">
-                <span className="login-input-icon">📧</span>
+                <span className="login-input-icon" aria-hidden="true">
+                  📧
+                </span>
                 <input
                   id="email"
                   type="email"
@@ -117,7 +120,9 @@ const LoginPage: React.FC = () => {
                 Password
               </label>
               <div className="login-input-wrapper">
-                <span className="login-input-icon">🔒</span>
+                <span className="login-input-icon" aria-hidden="true">
+                  🔒
+                </span>
                 <input
                   id="password"
                   type="password"
@@ -131,12 +136,6 @@ const LoginPage: React.FC = () => {
               </div>
 
               {error && <p className="login-error">{error}</p>}
-
-              <div className="login-form-footer">
-                <span className="login-need-account">
-                  Need an account? Contact your administrator.
-                </span>
-              </div>
 
               <button
                 type="submit"
