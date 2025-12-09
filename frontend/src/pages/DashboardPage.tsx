@@ -35,7 +35,7 @@ type DashboardData = {
 // ---------- MOCK DATA (fallback if backend fails) ----------
 
 const mockDashboardData: DashboardData = {
-  userName: "Alex",
+  userName: "Admin",
   stockAvailability: 97.5,
   itemsInStock: 3528,
   reorderAlerts: 12,
