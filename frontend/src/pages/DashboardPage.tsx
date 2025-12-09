@@ -1,5 +1,6 @@
-import React, { useMemo, useState, useEffect } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
+import api from "../api/client";
 import { mockProducts, Product } from "../mock/inventory";
 
 type Sale = {
@@ -51,10 +52,22 @@ const revenueTrendSample = [32, 52, 44, 78, 61, 55];
 const DashboardPage: React.FC = () => {
   const [animateChart, setAnimateChart] = useState(false);
 
+  // Small delay for chart animation
   useEffect(() => {
-    // small delay for chart animation
     const t = setTimeout(() => setAnimateChart(true), 150);
     return () => clearTimeout(t);
+  }, []);
+
+  // Backend connection test (console only)
+  useEffect(() => {
+    api
+      .get("/")
+      .then((res) => {
+        console.log("✅ Backend connected:", res.data);
+      })
+      .catch((err) => {
+        console.error("❌ Backend error:", err);
+      });
   }, []);
 
   // ------- Derived metrics from mock data -------
@@ -89,197 +102,173 @@ const DashboardPage: React.FC = () => {
     return ranked.slice(0, 5);
   }, []);
 
-  const formatCurrency = (value: number) =>
-    `₹${value.toLocaleString("en-IN")}`;
+  const recentSales = mockSales;
+
+  // ------- Render -------
 
   return (
-    <div className="page dashboard-page">
-      {/* Top bar with title and quick actions */}
-      <div className="dashboard-header-row">
-        <div className="page-header">
-          <h1>Overview</h1>
-          <p>Daily snapshot of revenue, orders and inventory health.</p>
+    <div className="page">
+      {/* Header */}
+      <header className="page-header">
+        <div>
+          <h1 className="page-title">Inventory Dashboard</h1>
+          <p className="page-subtitle">
+            Monitor products, stock health and daily sales in one place.
+          </p>
+        </div>
+        <div className="page-header-actions">
+          <Link to="/sales" className="btn btn-primary">
+            + New Invoice
+          </Link>
+          <Link to="/products" className="btn btn-outline">
+            View Products
+          </Link>
+        </div>
+      </header>
+
+      {/* KPI cards */}
+      <section className="stats-grid">
+        <div className="stat-card">
+          <div className="stat-label">Total Products</div>
+          <div className="stat-value">{totalProducts}</div>
+          <div className="stat-subtitle">Active items in catalogue</div>
         </div>
 
-        <div className="dashboard-header-actions">
-          <div className="dashboard-pill-group">
-            <button className="dashboard-pill dashboard-pill-active">
-              Today
-            </button>
-            <button className="dashboard-pill">This week</button>
-            <button className="dashboard-pill">This month</button>
+        <div className="stat-card">
+          <div className="stat-label">Low Stock Items</div>
+          <div className="stat-value stat-danger">{lowStockItems}</div>
+          <div className="stat-subtitle">Need restocking soon</div>
+        </div>
+
+        <div className="stat-card">
+          <div className="stat-label">Today&apos;s Revenue</div>
+          <div className="stat-value">₹{todayRevenue.toLocaleString()}</div>
+          <div className="stat-subtitle">From all recorded invoices</div>
+        </div>
+
+        <div className="stat-card">
+          <div className="stat-label">Average Order Value</div>
+          <div className="stat-value">
+            ₹{averageOrderValue.toLocaleString()}
           </div>
-          <button className="dashboard-export-btn">Download report</button>
+          <div className="stat-subtitle">Across {totalOrders} orders</div>
         </div>
-      </div>
+      </section>
 
-      {/* KPI row */}
-      <div className="kpi-row">
-        <div className="kpi-card kpi-card-hover">
-          <div className="kpi-label">Total revenue (today)</div>
-          <div className="kpi-value">{formatCurrency(todayRevenue)}</div>
-          <div className="kpi-sub">From all recorded orders</div>
-          <div className="kpi-trend kpi-trend-up">▲ +12.4% vs yesterday</div>
-        </div>
-
-        <div className="kpi-card kpi-card-hover">
-          <div className="kpi-label">Orders</div>
-          <div className="kpi-value">{totalOrders}</div>
-          <div className="kpi-sub">Completed invoices</div>
-          <div className="kpi-trend kpi-trend-neutral">→ Stable volume</div>
-        </div>
-
-        <div className="kpi-card kpi-card-hover">
-          <div className="kpi-label">Avg. order value</div>
-          <div className="kpi-value">{formatCurrency(averageOrderValue)}</div>
-          <div className="kpi-sub">Across today&apos;s orders</div>
-          <div className="kpi-trend kpi-trend-up">▲ 5.2% vs last week</div>
-        </div>
-
-        <div className="kpi-card kpi-card-hover">
-          <div className="kpi-label">Low stock items</div>
-          <div className="kpi-value kpi-danger">{lowStockItems}</div>
-          <div className="kpi-sub">Need restock soon</div>
-          <div className="kpi-trend kpi-trend-down">▼ Restocked yesterday</div>
-        </div>
-      </div>
-
-      {/* Revenue chart + Recent activity */}
-      <div className="grid-2">
-        {/* Revenue overview */}
-        <div className="card">
+      {/* Main content grid */}
+      <div className="dashboard-grid">
+        {/* Revenue trend */}
+        <section className="card chart-card">
           <div className="card-header">
-            <span>Revenue overview</span>
-            <span className="card-meta">Sample chart · frontend only</span>
-          </div>
-
-          <div className="dashboard-chart">
-            <div className="chart-bars">
-              {revenueTrendSample.map((h, idx) => (
-                <div key={idx} className="chart-bar">
-                  <div
-                    className={
-                      idx === revenueTrendSample.length - 1
-                        ? "chart-bar-fill chart-bar-fill-accent"
-                        : "chart-bar-fill"
-                    }
-                    style={{
-                      height: animateChart ? `${h}%` : "0%",
-                    }}
-                  />
-                </div>
-              ))}
-            </div>
-            <div className="chart-footer">
-              <div>
-                <div className="summary-label">Today</div>
-                <div className="summary-value">
-                  {formatCurrency(todayRevenue)}
-                </div>
-              </div>
-              <div>
-                <div className="summary-label">This week (est.)</div>
-                <div className="summary-value">{formatCurrency(545000)}</div>
-              </div>
-              <div>
-                <div className="summary-label">Refund rate</div>
-                <div className="summary-value">1.4%</div>
-              </div>
+            <div>
+              <h2 className="card-title">Revenue trend</h2>
+              <p className="card-subtitle">Sample last 6 days</p>
             </div>
           </div>
-        </div>
 
-        {/* Recent activity + quick nav */}
-        <div className="card">
-          <div className="card-header">
-            <span>Recent activity</span>
-            <span className="card-meta">Latest 4 invoices · no backend</span>
-          </div>
-
-          <div className="recent-list">
-            {mockSales.map((sale) => (
-              <div key={sale.id} className="recent-row">
-                <div className="recent-main">
-                  <div className="recent-id">{sale.invoice}</div>
-                  <div className="recent-name">{sale.customer}</div>
-                </div>
-                <div className="recent-meta">
-                  <span className="recent-date">{sale.date}</span>
-                  <span className="recent-amount">
-                    {formatCurrency(sale.amount)}
-                  </span>
-                </div>
+          <div className="chart-bars">
+            {revenueTrendSample.map((value, idx) => (
+              <div key={idx} className="chart-bar-wrapper">
+                <div
+                  className={`chart-bar ${
+                    animateChart ? "chart-bar-animate" : ""
+                  }`}
+                  style={{ height: `${value}%` }}
+                />
               </div>
             ))}
           </div>
+        </section>
 
-          <div className="recent-footer">
-            <Link to="/sales" className="link-button">
-              Go to sales
+        {/* Recent sales */}
+        <section className="card table-card">
+          <div className="card-header">
+            <div>
+              <h2 className="card-title">Recent invoices</h2>
+              <p className="card-subtitle">Latest recorded sales</p>
+            </div>
+            <Link to="/sales" className="card-link">
+              View all
             </Link>
           </div>
-        </div>
+
+          <div className="table-wrapper">
+            <table className="table">
+              <thead>
+                <tr>
+                  <th>Invoice</th>
+                  <th>Customer</th>
+                  <th>Date</th>
+                  <th className="text-right">Amount</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {recentSales.map((sale) => (
+                  <tr key={sale.id}>
+                    <td>{sale.invoice}</td>
+                    <td>{sale.customer}</td>
+                    <td>{sale.date}</td>
+                    <td className="text-right">
+                      ₹{sale.amount.toLocaleString()}
+                    </td>
+                    <td>
+                      <span
+                        className={
+                          sale.status === "Paid"
+                            ? "badge badge-success"
+                            : "badge badge-warning"
+                        }
+                      >
+                        {sale.status}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
       </div>
 
-      {/* Top products table */}
-      <div className="card" style={{ marginTop: 14 }}>
+      {/* Top products */}
+      <section className="card table-card">
         <div className="card-header">
-          <span>Top products by revenue</span>
-          <span className="card-meta">Static demo data · no backend</span>
+          <div>
+            <h2 className="card-title">Top products by stock value</h2>
+            <p className="card-subtitle">
+              Based on selling price × current stock
+            </p>
+          </div>
         </div>
 
-        <table className="simple-table">
-          <thead>
-            <tr>
-              <th>Product</th>
-              <th>Category</th>
-              <th>Revenue (est.)</th>
-              <th>Stock</th>
-            </tr>
-          </thead>
-          <tbody>
-            {topProducts.map((item, index) => (
-              <tr key={item.product.id}>
-                <td>
-                  <span className="table-rank">{index + 1}</span>
-                  {item.product.name}
-                </td>
-                <td>{item.product.category}</td>
-                <td>{formatCurrency(item.revenue)}</td>
-                <td>{item.product.stock}</td>
+        <div className="table-wrapper">
+          <table className="table">
+            <thead>
+              <tr>
+                <th>Product</th>
+                <th>Category</th>
+                <th className="text-right">Selling price</th>
+                <th className="text-right">Stock</th>
+                <th className="text-right">Stock value</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      {/* Quick navigation to other pages */}
-      <div className="card" style={{ marginTop: 14 }}>
-        <div className="card-header">
-          <span>Quick access</span>
-          <span className="card-meta">
-            Open the main pages directly from the dashboard.
-          </span>
+            </thead>
+            <tbody>
+              {topProducts.map(({ product, revenue }) => (
+                <tr key={product.id}>
+                  <td>{product.name}</td>
+                  <td>{product.category}</td>
+                  <td className="text-right">
+                    ₹{product.sellingPrice.toLocaleString()}
+                  </td>
+                  <td className="text-right">{product.stock}</td>
+                  <td className="text-right">₹{revenue.toLocaleString()}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
-
-        <div className="dashboard-quick-grid">
-          <Link to="/products" className="quick-card">
-            <div className="quick-label">Products</div>
-            <div className="quick-title">Product inventory</div>
-            <div className="quick-subtitle">
-              View, search and manage available items.
-            </div>
-          </Link>
-
-          <Link to="/sales" className="quick-card">
-            <div className="quick-label">Sales</div>
-            <div className="quick-title">Sales & invoices</div>
-            <div className="quick-subtitle">
-              Create new orders and track performance.
-            </div>
-          </Link>
-        </div>
-      </div>
+      </section>
     </div>
   );
 };
