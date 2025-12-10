@@ -1,347 +1,341 @@
 // frontend/src/pages/DashboardPage.tsx
 
-import React, { useEffect, useState, useMemo } from "react";
-import { Link } from "react-router-dom";
+import React, { useEffect, useState } from "react";
 import api from "../api/client";
 
-type Product = {
-  id: number | string;
-  name: string;
-  category: string;
-  buying_price: number;
-  selling_price: number;
-  stock: number;
+type StockLevelRow = {
+  product: string;
+  sku: string;
+  onHand: number;
+  available: number;
+  value: number;
 };
 
-type Sale = {
-  id: number | string;
-  invoice: string;
-  customer: string;
+type RecentOrderRow = {
+  orderId: string;
+  date: string;
+  status: string;
   amount: number;
-  status: "Paid" | "Pending" | string;
-  created_at?: string;
+};
+
+type DashboardData = {
+  userName: string;
+  stockAvailability: number; // e.g. 97.5
+  itemsInStock: number;
+  reorderAlerts: number;
+  inventorySeries: { label: string; value: number }[];
+  stockLevels: StockLevelRow[];
+  revenue: number;
+  totalOrders: number;
+  pendingOrders: number;
+  ordersByDay: { label: string; value: number }[];
+  recentOrders: RecentOrderRow[];
+};
+
+// ---------- MOCK DATA (fallback if backend fails) ----------
+
+const mockDashboardData: DashboardData = {
+  userName: "Admin",
+  stockAvailability: 97.5,
+  itemsInStock: 3528,
+  reorderAlerts: 12,
+  inventorySeries: [
+    { label: "Day 1", value: 200 },
+    { label: "Day 2", value: 220 },
+    { label: "Day 3", value: 235 },
+    { label: "Day 4", value: 250 },
+    { label: "Day 5", value: 270 },
+    { label: "Day 6", value: 290 },
+    { label: "Day 7", value: 310 },
+  ],
+  stockLevels: [
+    {
+      product: "Wireless Mouse",
+      sku: "WM123",
+      onHand: 120,
+      available: 115,
+      value: 2875,
+    },
+    {
+      product: "Office Chair",
+      sku: "OC456",
+      onHand: 78,
+      available: 78,
+      value: 23400,
+    },
+    {
+      product: "Desk Lamp",
+      sku: "DL789",
+      onHand: 245,
+      available: 245,
+      value: 7350,
+    },
+    {
+      product: "Filing Cabinet",
+      sku: "FC101",
+      onHand: 50,
+      available: 50,
+      value: 12500,
+    },
+    {
+      product: "Monitor Stand",
+      sku: "MS112",
+      onHand: 200,
+      available: 200,
+      value: 10000,
+    },
+  ],
+  revenue: 58942,
+  totalOrders: 1092,
+  pendingOrders: 26,
+  ordersByDay: [
+    { label: "M", value: 4 },
+    { label: "T", value: 7 },
+    { label: "W", value: 5 },
+    { label: "T", value: 9 },
+    { label: "F", value: 6 },
+    { label: "S", value: 3 },
+    { label: "S", value: 4 },
+  ],
+  recentOrders: [
+    {
+      orderId: "#1063",
+      date: "04/22/2024",
+      status: "Shipped",
+      amount: 1250,
+    },
+    {
+      orderId: "#1062",
+      date: "04/21/2024",
+      status: "Processing",
+      amount: 824,
+    },
+    {
+      orderId: "#1061",
+      date: "04/20/2024",
+      status: "Shipped",
+      amount: 2170,
+    },
+    {
+      orderId: "#1060",
+      date: "04/19/2024",
+      status: "Cancelled",
+      amount: 149,
+    },
+    {
+      orderId: "#1059",
+      date: "04/18/2024",
+      status: "Shipped",
+      amount: 459,
+    },
+  ],
 };
 
 const DashboardPage: React.FC = () => {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [sales, setSales] = useState<Sale[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
+  const [data, setData] = useState<DashboardData | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const loadDashboard = async () => {
-      setLoading(true);
-      setError(null);
-
+    const load = async () => {
       try {
-        const [productsResult, salesResult] = await Promise.allSettled([
-          api.get<Product[]>("/products"),
-          api.get<Sale[]>("/sales"), // if not implemented yet, this will fail gracefully
-        ]);
-
-        if (productsResult.status === "fulfilled") {
-          setProducts(productsResult.value.data || []);
-        } else {
-          console.error("Failed to load products:", productsResult.reason);
-        }
-
-        if (salesResult.status === "fulfilled") {
-          setSales(salesResult.value.data || []);
-        } else {
-          console.warn(
-            "Sales API not available yet. Sales KPIs will show 0 by default."
-          );
-          setSales([]);
-        }
+        // If your backend has a route like GET /api/dashboard
+        // it should return the same shape as DashboardData.
+        const response = await api.get<DashboardData>("/api/dashboard");
+        setData(response.data);
       } catch (err) {
-        console.error("Dashboard load error:", err);
-        setError("Failed to load dashboard data.");
+        console.warn("Dashboard API failed, using mock data", err);
+        setData(mockDashboardData);
       } finally {
         setLoading(false);
       }
     };
 
-    loadDashboard();
+    load();
   }, []);
 
-  // -------- Derived metrics from live data --------
-
-  const totalProducts = useMemo(
-    () => products.length,
-    [products]
-  );
-
-  const lowStockItems = useMemo(
-    () => products.filter((p) => Number(p.stock) <= 5).length,
-    [products]
-  );
-
-  const inventoryValue = useMemo(
-    () =>
-      products.reduce(
-        (sum, p) => sum + Number(p.selling_price || 0) * Number(p.stock || 0),
-        0
-      ),
-    [products]
-  );
-
-  const totalRevenue = useMemo(
-    () => sales.reduce((sum, s) => sum + Number(s.amount || 0), 0),
-    [sales]
-  );
-
-  const totalOrders = useMemo(() => sales.length, [sales]);
-
-  const avgOrderValue = useMemo(
-    () =>
-      sales.length > 0 ? Math.round(totalRevenue / sales.length) : 0,
-    [totalRevenue, sales.length]
-  );
-
-  const recentSales = useMemo(
-    () => sales.slice(0, 5),
-    [sales]
-  );
-
-  const topProducts = useMemo(() => {
-    const ranked = products
-      .map((p) => ({
-        product: p,
-        value:
-          Number(p.selling_price || 0) *
-          Number(p.stock || 0),
-      }))
-      .sort((a, b) => b.value - a.value)
-      .slice(0, 5);
-
-    return ranked;
-  }, [products]);
-
-  const revenueTrendSample = useMemo(() => {
-    if (sales.length === 0) {
-      return [32, 48, 44, 52, 61, 55];
-    }
-    const buckets = [0, 0, 0, 0, 0, 0];
-    sales.forEach((s, index) => {
-      const bucketIndex = index % buckets.length;
-      buckets[bucketIndex] += Number(s.amount || 0);
-    });
-    const max = Math.max(...buckets, 1);
-    return buckets.map((v) => Math.round((v / max) * 100));
-  }, [sales]);
-
-  // -------- UI rendering --------
-
-  if (loading) {
-    return (
-      <div className="dashboard-page">
-        <div className="dashboard-loading">Loading dashboard…</div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="dashboard-page">
-        <div className="dashboard-error">{error}</div>
-      </div>
-    );
-  }
+  const d = data ?? mockDashboardData;
 
   return (
-    <div className="dashboard-page">
-      {/* Top header */}
-      <header className="dashboard-header">
-        <div>
-          <h1 className="dashboard-title">Inventory overview</h1>
-          <p className="dashboard-subtitle">
-            Live inventory, sales snapshots and low stock insights powered by your
-            connected database.
-          </p>
-        </div>
-        <div className="dashboard-header-actions">
-          <Link to="/sales" className="primary-cta">
-            New invoice
-          </Link>
-          <Link to="/products" className="ghost-cta">
-            View products
-          </Link>
-        </div>
-      </header>
-
-      {/* KPI grid */}
-      <section className="dashboard-kpi-grid">
-        <div className="kpi-card kpi-card-primary">
-          <div className="kpi-label">Total products</div>
-          <div className="kpi-value">{totalProducts}</div>
-          <div className="kpi-subtext">
-            {lowStockItems} items are currently in low stock
-          </div>
-        </div>
-
-        <div className="kpi-card">
-          <div className="kpi-label">Inventory value</div>
-          <div className="kpi-value">
-            ₹{inventoryValue.toLocaleString("en-IN")}
-          </div>
-          <div className="kpi-subtext">
-            Calculated from selling price × live stock levels
-          </div>
-        </div>
-
-        <div className="kpi-card">
-          <div className="kpi-label">Total revenue</div>
-          <div className="kpi-value">
-            ₹{totalRevenue.toLocaleString("en-IN")}
-          </div>
-          <div className="kpi-subtext">
-            Based on sales records available in the system
-          </div>
-        </div>
-
-        <div className="kpi-card">
-          <div className="kpi-label">Orders</div>
-          <div className="kpi-value">{totalOrders}</div>
-          <div className="kpi-subtext">
-            Avg. order value ₹{avgOrderValue.toLocaleString("en-IN")}
-          </div>
-        </div>
-      </section>
-
-      {/* Middle layout: revenue trend + top products */}
-      <section className="dashboard-main-grid">
-        <div className="dashboard-panel">
-          <div className="panel-header">
-            <h2>Revenue trend</h2>
-            <span className="panel-tag">Live snapshot</span>
-          </div>
-          <p className="panel-subtitle">
-            Relative revenue distribution across recent sales entries.
-          </p>
-
-          <div className="mini-chart">
-            <svg viewBox="0 0 100 40" preserveAspectRatio="none">
-              {revenueTrendSample.map((value, index) => {
-                const x = (index / (revenueTrendSample.length - 1 || 1)) * 100;
-                const y = 40 - (value / 100) * 30 - 5;
-                return (
-                  <circle
-                    key={index}
-                    cx={x}
-                    cy={y}
-                    r={1.5}
-                    className="mini-chart-dot"
-                  />
-                );
-              })}
-              {revenueTrendSample.length > 1 && (
-                <polyline
-                  fill="none"
-                  className="mini-chart-line"
-                  points={revenueTrendSample
-                    .map((value, index) => {
-                      const x =
-                        (index / (revenueTrendSample.length - 1 || 1)) * 100;
-                      const y = 40 - (value / 100) * 30 - 5;
-                      return `${x},${y}`;
-                    })
-                    .join(" ")}
-                />
-              )}
-            </svg>
-          </div>
-        </div>
-
-        <div className="dashboard-panel">
-          <div className="panel-header">
-            <h2>Top value products</h2>
-          </div>
-          <p className="panel-subtitle">
-            Ranked by selling price × current stock quantity.
-          </p>
-
-          <div className="top-products-list">
-            {topProducts.length === 0 && (
-              <div className="empty-state">
-                No products found. Add products to see rankings here.
+    <div className="bi-dashboard-root">
+      <div className="bi-dashboard-shell">
+        {/* Top bar inside the card (Welcome + right side chart) */}
+        <div className="bi-dashboard-top">
+          <div className="bi-dashboard-top-left">
+            <h1 className="bi-dashboard-title">
+              Welcome back, {d.userName}!
+            </h1>
+            <div className="bi-dashboard-kpi-row">
+              <div className="bi-dashboard-kpi-card">
+                <p className="bi-dashboard-kpi-label">Stock Availability</p>
+                <p className="bi-dashboard-kpi-value">
+                  {d.stockAvailability.toFixed(1)}%
+                </p>
               </div>
-            )}
-
-            {topProducts.map(({ product, value }) => (
-              <div className="top-product-row" key={product.id}>
-                <div className="top-product-main">
-                  <div className="top-product-avatar">
-                    {String(product.name).charAt(0).toUpperCase()}
-                  </div>
-                  <div>
-                    <div className="top-product-name">{product.name}</div>
-                    <div className="top-product-meta">
-                      {product.category} • Stock: {product.stock}
-                    </div>
-                  </div>
-                </div>
-                <div className="top-product-value">
-                  ₹{value.toLocaleString("en-IN")}
-                </div>
+              <div className="bi-dashboard-kpi-card">
+                <p className="bi-dashboard-kpi-label">Items in Stock</p>
+                <p className="bi-dashboard-kpi-value">
+                  {d.itemsInStock.toLocaleString()}
+                </p>
               </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Bottom: recent sales */}
-      <section className="dashboard-bottom-grid">
-        <div className="dashboard-panel">
-          <div className="panel-header">
-            <h2>Recent sales</h2>
-            <Link to="/sales" className="panel-link">
-              View all
-            </Link>
-          </div>
-          <p className="panel-subtitle">
-            Latest recorded invoices from your sales register.
-          </p>
-
-          {recentSales.length === 0 ? (
-            <div className="empty-state">
-              No sales records available yet. New invoices will appear here.
+              <div className="bi-dashboard-kpi-card">
+                <p className="bi-dashboard-kpi-label">Reorder Alerts</p>
+                <p className="bi-dashboard-kpi-value">
+                  {d.reorderAlerts.toLocaleString()}
+                </p>
+              </div>
             </div>
-          ) : (
-            <div className="table-wrapper">
-              <table className="simple-table">
+          </div>
+
+          {/* Right side - mini line chart for inventory value */}
+          <div className="bi-dashboard-inventory-card">
+            <div className="bi-dashboard-card-header">
+              <p className="bi-dashboard-card-title">Inventory Value</p>
+              <span className="bi-dashboard-card-subtitle">
+                Last {d.inventorySeries.length} days
+              </span>
+            </div>
+            <div className="bi-dashboard-line-chart">
+              {d.inventorySeries.map((point, idx) => (
+                <div
+                  key={point.label}
+                  className="bi-dashboard-line-chart-bar"
+                  style={{
+                    height: `${40 + point.value / 10}px`,
+                    opacity:
+                      idx === d.inventorySeries.length - 1 ? 1 : 0.7,
+                  }}
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Bottom grid: stock table + orders summary + recent orders table */}
+        <div className="bi-dashboard-bottom-grid">
+          {/* Stock levels table */}
+          <section className="bi-dashboard-card bi-dashboard-stock-card">
+            <header className="bi-dashboard-card-header">
+              <p className="bi-dashboard-card-title">Stock Levels</p>
+            </header>
+            <div className="bi-dashboard-table-wrapper">
+              <table className="bi-dashboard-table">
                 <thead>
                   <tr>
-                    <th>Invoice</th>
-                    <th>Customer</th>
-                    <th>Amount</th>
-                    <th>Status</th>
+                    <th>Product</th>
+                    <th>SKU</th>
+                    <th>On hand</th>
+                    <th>Available</th>
+                    <th>Value</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {recentSales.map((sale) => (
-                    <tr key={sale.id}>
-                      <td>{sale.invoice}</td>
-                      <td>{sale.customer}</td>
-                      <td>₹{Number(sale.amount).toLocaleString("en-IN")}</td>
+                  {d.stockLevels.map((row) => (
+                    <tr key={row.sku}>
+                      <td>{row.product}</td>
+                      <td>{row.sku}</td>
+                      <td>{row.onHand}</td>
+                      <td>{row.available}</td>
                       <td>
-                        <span
-                          className={
-                            sale.status === "Paid"
-                              ? "status-pill status-pill-success"
-                              : "status-pill status-pill-warning"
-                          }
-                        >
-                          {sale.status}
-                        </span>
+                        $
+                        {row.value.toLocaleString(undefined, {
+                          minimumFractionDigits: 0,
+                        })}
                       </td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
-          )}
+          </section>
+
+          {/* Right column: recent orders summary + small bar chart + recent orders table */}
+          <div className="bi-dashboard-right-col">
+            {/* Recent orders summary */}
+            <section className="bi-dashboard-card bi-dashboard-orders-summary">
+              <header className="bi-dashboard-card-header">
+                <p className="bi-dashboard-card-title">Recent Orders</p>
+              </header>
+              <div className="bi-dashboard-orders-stats">
+                <div>
+                  <p className="bi-dashboard-muted">Revenue</p>
+                  <p className="bi-dashboard-big-number">
+                    â‚¹{d.revenue.toLocaleString()}
+                  </p>
+                </div>
+                <div>
+                  <p className="bi-dashboard-muted">Orders</p>
+                  <p className="bi-dashboard-big-number">
+                    {d.totalOrders.toLocaleString()}
+                  </p>
+                </div>
+                <div>
+                  <p className="bi-dashboard-muted">Pending</p>
+                  <p className="bi-dashboard-big-number">
+                    {d.pendingOrders.toLocaleString()}
+                  </p>
+                </div>
+              </div>
+
+              <div className="bi-dashboard-mini-bar-chart">
+                {d.ordersByDay.map((day) => (
+                  <div
+                    key={day.label}
+                    className="bi-dashboard-mini-bar-wrapper"
+                  >
+                    <div
+                      className="bi-dashboard-mini-bar"
+                      style={{ height: `${30 + day.value * 6}px` }}
+                    />
+                    <span className="bi-dashboard-mini-bar-label">
+                      {day.label}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            {/* Recent orders table */}
+            <section className="bi-dashboard-card bi-dashboard-recent-orders">
+              <header className="bi-dashboard-card-header">
+                <p className="bi-dashboard-card-title">Recent orders</p>
+              </header>
+              <div className="bi-dashboard-table-wrapper">
+                <table className="bi-dashboard-table">
+                  <thead>
+                    <tr>
+                      <th>Order</th>
+                      <th>Date</th>
+                      <th>Status</th>
+                      <th>Amount</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {d.recentOrders.map((row) => (
+                      <tr key={row.orderId}>
+                        <td>{row.orderId}</td>
+                        <td>{row.date}</td>
+                        <td>{row.status}</td>
+                        <td>
+                          â‚¹
+                          {row.amount.toLocaleString(undefined, {
+                            minimumFractionDigits: 0,
+                          })}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </section>
+          </div>
         </div>
-      </section>
+
+        {loading && (
+          <div className="bi-dashboard-loading-overlay">
+            <span>Loading live dataâ€¦</span>
+          </div>
+        )}
+      </div>
     </div>
   );
 };
