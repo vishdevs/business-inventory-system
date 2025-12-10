@@ -100,33 +100,33 @@ const mockDashboardData: DashboardData = {
   recentOrders: [
     {
       orderId: "#1063",
-      date: "04/22/2024",
+      date: "04/22/2025",
       status: "Shipped",
-      amount: 1250,
+      amount:  1250,
     },
     {
       orderId: "#1062",
-      date: "04/21/2024",
+      date: "04/21/2025",
       status: "Processing",
-      amount: 824,
+      amount:  824,
     },
     {
       orderId: "#1061",
-      date: "04/20/2024",
+      date: "04/20/2025",
       status: "Shipped",
-      amount: 2170,
+      amount:  2170,
     },
     {
       orderId: "#1060",
-      date: "04/19/2024",
+      date: "04/19/2025",
       status: "Cancelled",
-      amount: 149,
+      amount:  149,
     },
     {
       orderId: "#1059",
-      date: "04/18/2024",
+      date: "04/18/2025",
       status: "Shipped",
-      amount: 459,
+      amount:  459,
     },
   ],
 };
